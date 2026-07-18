@@ -2,155 +2,155 @@
 controller_agent.py
 
 Responsible for:
-1. Orchestrating all AI agents.
-2. Displaying the main menu.
-3. Routing user requests to the appropriate agent.
+1. Receiving user queries.
+2. Detecting user intent.
+3. Executing the correct workflow.
 """
 
+from agents.exam_analysis_agent import ExamAnalysisAgent
+from agents.flashcard_agent import FlashcardAgent
 from agents.notes_agent import NotesAgent
-from modules.rag_pipeline import RAGPipeline
+from agents.quality_auditor_agent import QualityAuditorAgent
+from agents.retrieval_agent import RetrievalAgent
+from agents.answer_agent import AnswerAgent
 
 
 class ControllerAgent:
-    """Coordinates all AI agents."""
+    """Main orchestrator."""
 
     def __init__(
         self,
-        rag_pipeline: RAGPipeline,
+        retrieval_agent: RetrievalAgent,
+        answer_agent: AnswerAgent,
+        notes_agent: NotesAgent,
+        flashcard_agent: FlashcardAgent,
+        exam_agent: ExamAnalysisAgent,
+        quality_agent: QualityAuditorAgent,
     ) -> None:
-        """
-        Initialize all agents.
 
-        Args:
-            rag_pipeline: Shared RAG pipeline.
-        """
-
-        self.notes_agent = NotesAgent(rag_pipeline)
-
-        # Future agents
-        # self.flashcard_agent = FlashcardAgent(rag_pipeline)
-        # self.exam_agent = ExamAnalysisAgent(rag_pipeline)
-        # self.quality_agent = QualityAuditorAgent(rag_pipeline)
-
-    def show_menu(self) -> str:
-        """
-        Display the main menu.
-
-        Returns:
-            User's menu choice.
-        """
-
-        print("\n" + "=" * 80)
-        print("Multi-Agent Student Study Assistant")
-        print("=" * 80)
-        print("1. Retrieval Agent (Ask Questions)")
-        print("2. Notes Agent")
-        print("3. Flashcard Agent (Coming Soon)")
-        print("4. Exam Analysis Agent (Coming Soon)")
-        print("5. Quality Auditor Agent (Coming Soon)")
-        print("6. Exit")
-        print("=" * 80)
-
-        return input("Select an option: ").strip()
-
-    def retrieval_agent(
-        self,
-        rag: RAGPipeline,
-    ) -> None:
-        """
-        Handle question answering.
-        """
-
-        query = input("\nEnter your question: ").strip()
-
-        if not query:
-            return
-
-        print("\nThinking...\n")
-
-        answer, documents = rag.answer(query)
-
-        print("=" * 80)
-        print("ANSWER")
-        print("=" * 80)
-        print(answer)
-
-        print("\n" + "=" * 80)
-        print("SOURCES")
-        print("=" * 80)
-
-        for i, document in enumerate(documents, start=1):
-
-            metadata = document.metadata
-
-            print(f"\n{i}. {metadata.get('source', 'Unknown')}")
-            print(f"   Class   : {metadata.get('class', 'Unknown')}")
-            print(f"   Subject : {metadata.get('subject', 'Unknown')}")
-            print(f"   Chapter : {metadata.get('chapter_number', 'Unknown')}")
-
-    def notes_agent_menu(self) -> None:
-        """
-        Handle Notes Agent.
-        """
-
-        topic = input("\nEnter chapter/topic: ").strip()
-
-        if not topic:
-            return
-
-        print("\nGenerating notes...\n")
-
-        notes, output_path = self.notes_agent.run(topic)
-
-        print("=" * 80)
-        print("NOTES GENERATED")
-        print("=" * 80)
-
-        print(notes[:1000])
-
-        if len(notes) > 1000:
-            print("\n...(output truncated)...")
-
-        print(f"\nSaved to: {output_path}")
+        self.retrieval_agent = retrieval_agent
+        self.answer_agent = answer_agent
+        self.notes_agent = notes_agent
+        self.flashcard_agent = flashcard_agent
+        self.exam_agent = exam_agent
+        self.quality_agent = quality_agent
 
     def run(
         self,
-        rag: RAGPipeline,
-    ) -> None:
+        query: str,
+    ):
         """
-        Start the Controller Agent.
+        Execute the correct workflow.
         """
 
-        while True:
+        query_lower = query.lower()
 
-            choice = self.show_menu()
+        # --------------------------
+        # Flashcards
+        # --------------------------
 
-            if choice == "1":
+        if "flashcard" in query_lower:
 
-                self.retrieval_agent(rag)
+            context, documents = self.retrieval_agent.run(query)
 
-            elif choice == "2":
+            notes, notes_path = self.notes_agent.run(
+                query,
+                context,
+            )
 
-                self.notes_agent_menu()
+            csv_path = self.flashcard_agent.run(
+                query,
+                notes,
+            )
 
-            elif choice == "3":
+            audit = self.quality_agent.run(
+                notes,
+                context,
+            )
 
-                print("\nFlashcard Agent is under development.")
+            return {
+                "type": "flashcards",
+                "notes": notes,
+                "notes_file": notes_path,
+                "flashcards_file": csv_path,
+                "audit": audit,
+                "sources": documents,
+            }
 
-            elif choice == "4":
+        # --------------------------
+        # Notes
+        # --------------------------
 
-                print("\nExam Analysis Agent is under development.")
+        if "note" in query_lower:
 
-            elif choice == "5":
+            context, documents = self.retrieval_agent.run(query)
 
-                print("\nQuality Auditor Agent is under development.")
+            notes, notes_path = self.notes_agent.run(
+                query,
+                context,
+            )
 
-            elif choice == "6":
+            audit = self.quality_agent.run(
+                notes,
+                context,
+            )
 
-                print("\nGoodbye!")
+            return {
+                "type": "notes",
+                "notes": notes,
+                "notes_file": notes_path,
+                "audit": audit,
+                "sources": documents,
+            }
 
-                break
+        # --------------------------
+        # Exam Analysis
+        # --------------------------
 
-            else:
+        if (
+            "exam" in query_lower
+            or "pyq" in query_lower
+            or "previous year" in query_lower
+        ):
 
-                print("\nInvalid choice.")
+            context, documents = self.retrieval_agent.run(query)
+
+            report = self.exam_agent.run(
+                query,
+                context,
+            )
+
+            audit = self.quality_agent.run(
+                report,
+                context,
+            )
+
+            return {
+                "type": "exam_analysis",
+                "report": report,
+                "audit": audit,
+                "sources": documents,
+            }
+
+        # --------------------------
+        # Default QA
+        # --------------------------
+
+        context, documents = self.retrieval_agent.run(query)
+
+        answer = self.answer_agent.run(
+            query,
+            context,
+        )
+
+        audit = self.quality_agent.run(
+            answer,
+            context,
+        )
+
+        return {
+            "type": "answer",
+            "answer": answer,
+            "audit": audit,
+            "sources": documents,
+        }

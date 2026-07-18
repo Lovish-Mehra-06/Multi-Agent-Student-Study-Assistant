@@ -31,7 +31,7 @@ class PDFLoader:
 
         if not self.pdf_path.exists():
             raise FileNotFoundError(f"PDF not found: {self.pdf_path}")
-
+    
     def _clean_text(self, text: str) -> str:
         """
         Clean extracted text.

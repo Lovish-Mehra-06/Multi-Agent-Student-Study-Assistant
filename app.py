@@ -6,29 +6,34 @@ Main entry point for the Multi-Agent Student Study Assistant.
 
 from pathlib import Path
 
+from agents.answer_agent import AnswerAgent
+from agents.controller_agent import ControllerAgent
+from agents.exam_analysis_agent import ExamAnalysisAgent
+from agents.flashcard_agent import FlashcardAgent
 from agents.notes_agent import NotesAgent
+from agents.quality_auditor_agent import QualityAuditorAgent
+from agents.retrieval_agent import RetrievalAgent
+
 from modules.chunker import DocumentChunker
+from modules.csv_writer import CSVWriter
 from modules.document_loader import DocumentLoader
 from modules.llm_client import LLMClient
-from modules.rag_pipeline import RAGPipeline
-from modules.retriever import Retriever
+from modules.markdown_writer import MarkdownWriter
+from modules.retriever import RetrieverTool
 from modules.vector_store import VectorStore
 
+BOOKS_PATH = "data/books/Class10/Science"
+VECTOR_DB_PATH = "data/vector_store/index.faiss"
 
-VECTOR_DB_PATH = Path("data/vector_store/index.faiss")
 
-
-def initialize_rag() -> RAGPipeline:
+def build_vector_database() -> VectorStore:
     """
-    Initialize the complete RAG pipeline.
-
-    Returns:
-        Configured RAGPipeline object.
+    Load existing vector database or build a new one.
     """
 
     vector_store = VectorStore()
 
-    if VECTOR_DB_PATH.exists():
+    if Path(VECTOR_DB_PATH).exists():
 
         print("Loading existing vector database...\n")
 
@@ -36,10 +41,9 @@ def initialize_rag() -> RAGPipeline:
 
     else:
 
-        print("No vector database found.")
         print("Building vector database...\n")
 
-        loader = DocumentLoader("data/books/Class10/Science")
+        loader = DocumentLoader(BOOKS_PATH)
 
         documents = loader.load()
 
@@ -51,135 +55,130 @@ def initialize_rag() -> RAGPipeline:
 
         vector_store.save()
 
-        print("Vector database created successfully!\n")
+        print("Vector database created successfully.\n")
 
-    retriever = Retriever(vector_store)
+    return vector_store
+
+
+def create_controller() -> ControllerAgent:
+    """
+    Create all agents.
+    """
+
+    vector_store = build_vector_database()
+
+    retriever_tool = RetrieverTool(
+        vector_store,
+    )
+
+    retrieval_agent = RetrievalAgent(
+        retriever_tool,
+    )
 
     llm = LLMClient()
 
-    return RAGPipeline(
-        retriever=retriever,
-        llm=llm,
+    markdown_writer = MarkdownWriter()
+
+    csv_writer = CSVWriter()
+
+    answer_agent = AnswerAgent(
+        llm,
     )
 
+    notes_agent = NotesAgent(
+        llm,
+        markdown_writer,
+    )
 
-def print_sources(documents) -> None:
-    """
-    Print retrieved document sources.
-    """
+    flashcard_agent = FlashcardAgent(
+        llm,
+        csv_writer,
+    )
 
-    print("\n" + "=" * 80)
-    print("SOURCES")
-    print("=" * 80)
+    exam_agent = ExamAnalysisAgent(
+        llm,
+    )
 
-    for i, document in enumerate(documents, start=1):
+    quality_agent = QualityAuditorAgent(
+        llm,
+    )
 
-        metadata = document.metadata
+    controller = ControllerAgent(
+        retrieval_agent=retrieval_agent,
+        answer_agent=answer_agent,
+        notes_agent=notes_agent,
+        flashcard_agent=flashcard_agent,
+        exam_agent=exam_agent,
+        quality_agent=quality_agent,
+    )
 
-        print(f"\n{i}. {metadata.get('source', 'Unknown Source')}")
-        print(f"   Class   : {metadata.get('class', 'Unknown')}")
-        print(f"   Subject : {metadata.get('subject', 'Unknown')}")
-        print(f"   Chapter : {metadata.get('chapter_number', 'Unknown')}")
-
-
-def ask_question(
-    rag: RAGPipeline,
-) -> None:
-    """
-    Ask a question using the RAG pipeline.
-    """
-
-    query = input("\nEnter your question: ").strip()
-
-    if not query:
-        return
-
-    print("\nGenerating answer...\n")
-
-    answer, documents = rag.answer(query)
-
-    print("=" * 80)
-    print("ANSWER")
-    print("=" * 80)
-    print(answer)
-
-    print_sources(documents)
-
-
-def generate_notes(
-    notes_agent: NotesAgent,
-) -> None:
-    """
-    Generate notes for a topic.
-    """
-
-    topic = input("\nEnter chapter/topic: ").strip()
-
-    if not topic:
-        return
-
-    print("\nGenerating notes...\n")
-
-    notes, output_path = notes_agent.run(topic)
-
-    print("=" * 80)
-    print("NOTES GENERATED")
-    print("=" * 80)
-
-    print(notes[:1000])
-
-    if len(notes) > 1000:
-        print("\n...(output truncated)...")
-
-    print(f"\nSaved to: {output_path}")
-
-
-def show_menu() -> str:
-    """
-    Display the main menu.
-
-    Returns:
-        User choice.
-    """
-
-    print("\n" + "=" * 80)
-    print("Multi-Agent Student Study Assistant")
-    print("=" * 80)
-    print("1. Ask Question")
-    print("2. Generate Notes")
-    print("3. Exit")
-    print("=" * 80)
-
-    return input("Select an option: ").strip()
+    return controller
 
 
 def main() -> None:
 
-    rag = initialize_rag()
+    print("=" * 80)
+    print("Multi-Agent Student Study Assistant")
+    print("=" * 80)
 
-    notes_agent = NotesAgent(rag)
+    controller = create_controller()
 
     while True:
 
-        choice = show_menu()
+        print("\n" + "-" * 80)
 
-        if choice == "1":
+        query = input("Enter your query ('exit' to quit): ").strip()
 
-            ask_question(rag)
-
-        elif choice == "2":
-
-            generate_notes(notes_agent)
-
-        elif choice == "3":
+        if query.lower() == "exit":
 
             print("\nGoodbye!")
 
             break
 
-        else:
+        result = controller.run(query)
 
-            print("\nInvalid option. Please try again.")
+        print("\n" + "=" * 80)
+        print("RESULT")
+        print("=" * 80)
+
+        if result["type"] == "answer":
+
+            print(result["answer"])
+
+        elif result["type"] == "notes":
+
+            print(result["notes"])
+            print(f"\nSaved to : {result['notes_file']}")
+
+        elif result["type"] == "flashcards":
+
+            print(result["notes"])
+            print(f"\nNotes      : {result['notes_file']}")
+            print(f"Flashcards : {result['flashcards_file']}")
+
+        elif result["type"] == "exam_analysis":
+
+            print(result["report"])
+
+        print("\n" + "=" * 80)
+        print("QUALITY REPORT")
+        print("=" * 80)
+
+        print(result["audit"])
+
+        print("\n" + "=" * 80)
+        print("SOURCES")
+        print("=" * 80)
+
+        for i, document in enumerate(result["sources"], start=1):
+
+            metadata = document.metadata
+
+            print(f"\n{i}. {metadata.get('source', 'Unknown')}")
+
+            print(f"   Chapter : {metadata.get('chapter_number', 'Unknown')}")
+
+            print(f"   Subject : {metadata.get('subject', 'Unknown')}")
 
 
 if __name__ == "__main__":

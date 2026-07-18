@@ -2,90 +2,79 @@
 notes_agent.py
 
 Responsible for:
-1. Generating structured study notes.
-2. Saving notes as Markdown.
+1. Generating chapter notes.
+2. Producing Markdown.
+3. Formatting equations using LaTeX.
 """
 
-from pathlib import Path
-from modules.rag_pipeline import RAGPipeline
-
-NOTES_PROMPT = """ 
-You are an expert NCERT teacher.
-
-Using ONLY the provided context, generate well-structured study notes.
-
-Requirements:
-- Use Markdown formatting.
-- Add clear headings and subheadings.
-- Explain concepts in simple language.
-- Include important definitions.
-- Include important points as bullet lists.
-- Include chemical equations or formulas where applicable.
-- Do NOT use outside knowledge.
-- If information is missing, do not invent it.
-
-Context:
-{context}
-
-Topic:
-{question}
-
-Generate comprehensive study notes.
-"""
+from modules.llm_client import LLMClient
+from modules.markdown_writer import MarkdownWriter
 
 
 class NotesAgent:
-    """Generates structured study notes."""
 
     def __init__(
-        self, rag_pipeline: RAGPipeline, output_dir: str = "outputs/notes"
+        self,
+        llm: LLMClient,
+        writer: MarkdownWriter,
     ) -> None:
 
-        self.rag = rag_pipeline
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.llm = llm
+        self.writer = writer
 
-    def generate_notes(self, topic: str) -> str:
+    def build_prompt(
+        self,
+        query: str,
+        context: str,
+    ) -> str:
         """
-        Generate notes for a topic.
-
-        Args:
-            topic: Topic or chapter name.
-
-        Returns:
-            Markdown notes.
+        Build the prompt for note generation.
         """
-        notes, documents = self.rag.answer(query=topic, prompt_template=NOTES_PROMPT)
-        return notes
 
-    def save_notes(self, topic: str, notes: str) -> Path:
-        """
-        Save notes to a Markdown file.
+        return f"""
+You are an expert NCERT teacher.
 
-        Args:
-            topic: Topic or chapter name.
-            notes: Markdown notes.
+Use ONLY the provided textbook context.
 
-        Returns:
-            Path to the saved file.
-        """
-        filename = topic.lower().replace(" ", "_").replace("/", "_").replace("\\", "_")
+Generate well-structured study notes in Markdown.
 
-        output_path = self.output_dir / f"{filename}.md"
+Requirements:
 
-        output_path.write_text(notes, encoding="utf-8")
+- Use Markdown headings.
+- Explain concepts clearly.
+- Use bullet points where appropriate.
+- Include important definitions.
+- Include formulas.
+- Write mathematical equations in LaTeX.
+- Mention important facts.
+- Do not invent information.
+- If information is missing, state that clearly.
 
-        return output_path
+Context:
 
-    def run(self, topic: str) -> Path:
-        """
-        Generate and save notes.
+{context}
 
-        Args:
-            topic: Topic or chapter name.
+Topic:
 
-        Returns:
-            Path to saved notes.
-        """
-        notes = self.generate_notes(topic)
-        return self.save_notes(topic, notes)
+{query}
+"""
+
+    def run(
+        self,
+        query: str,
+        context: str,
+    ) -> tuple[str, str]:
+
+        prompt = self.build_prompt(
+            query=query,
+            context=context,
+        )
+
+        markdown = self.llm.generate(prompt)
+
+        file_path = self.writer.save(
+            topic=query,
+            markdown=markdown,
+        )
+
+        return markdown, str(file_path)

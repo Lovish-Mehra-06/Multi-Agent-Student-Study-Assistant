@@ -32,9 +32,7 @@ class VectorStore:
 
         self.index_path = Path(index_path)
 
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name=model_name
-        )
+        self.embeddings = HuggingFaceEmbeddings(model_name=model_name)
 
         self.db: FAISS | None = None
 
@@ -64,9 +62,7 @@ class VectorStore:
             exist_ok=True,
         )
 
-        self.db.save_local(
-            str(self.index_path)
-        )
+        self.db.save_local(str(self.index_path))
 
     def load(self) -> None:
         """
@@ -77,4 +73,31 @@ class VectorStore:
             folder_path=str(self.index_path),
             embeddings=self.embeddings,
             allow_dangerous_deserialization=True,
+        )
+
+    def search(
+        self,
+        query: str,
+        k: int = 5,
+    ) -> list[Document]:
+        """
+        Search the vector database.
+
+        Args:
+            query:
+                User query.
+
+            k:
+                Number of documents to retrieve.
+
+        Returns:
+            Top-k relevant documents.
+        """
+
+        if self.db is None:
+            raise ValueError("Vector database has not been loaded.")
+
+        return self.db.similarity_search(
+            query=query,
+            k=k,
         )

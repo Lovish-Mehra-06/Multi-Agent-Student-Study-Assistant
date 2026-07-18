@@ -2,7 +2,7 @@
 llm_client.py
 
 Responsible for:
-1. Connecting to OpenRouter.
+1. Connecting to Groq.
 2. Sending prompts to the LLM.
 3. Returning generated responses.
 """
@@ -14,33 +14,28 @@ from openai import OpenAI
 
 
 class LLMClient:
-    """Client for interacting with OpenRouter models."""
+    """Client for interacting with Groq models."""
 
     def __init__(
         self,
-        model: str = "meta-llama/llama-3.1-8b-instruct:free",
+        model: str = "llama-3.3-70b-versatile",
         temperature: float = 0.3,
         max_tokens: int = 1024,
     ) -> None:
         """
-        Initialize the OpenRouter client.
-
-        Args:
-            model: OpenRouter model ID.
-            temperature: Controls randomness.
-            max_tokens: Maximum response length.
+        Initialize the Groq client.
         """
 
         load_dotenv()
 
-        api_key = os.getenv("OPENROUTER_API_KEY")
+        api_key = os.getenv("GROQ_API_KEY")
 
-        if not api_key:
-            raise ValueError("OPENROUTER_API_KEY not found in .env file.")
+        if api_key is None:
+            raise ValueError("GROQ_API_KEY not found in .env file.")
 
         self.client = OpenAI(
             api_key=api_key,
-            base_url="https://openrouter.ai/api/v1",
+            base_url="https://api.groq.com/openai/v1",
         )
 
         self.model = model
@@ -51,18 +46,11 @@ class LLMClient:
         self,
         prompt: str,
         system_prompt: str = (
-            "You are a helpful AI tutor that answers using only the provided context."
+            "You are a helpful AI tutor that answers ONLY using the provided context."
         ),
     ) -> str:
         """
         Generate a response from the LLM.
-
-        Args:
-            prompt: User prompt.
-            system_prompt: System instruction.
-
-        Returns:
-            Generated response.
         """
 
         response = self.client.chat.completions.create(
