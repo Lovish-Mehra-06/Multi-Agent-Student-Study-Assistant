@@ -664,3 +664,5 @@ if __name__ == "__main__":
         )
 
     print("\nFinished building database.")
+
+# need to fix the error that many questions are getting their answers empty(stored in the database)

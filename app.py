@@ -65,6 +65,10 @@ def create_controller() -> ControllerAgent:
     Create all agents.
     """
 
+    # -----------------------------------------
+    # Build / Load Vector Database
+    # -----------------------------------------
+
     vector_store = build_vector_database()
 
     retriever_tool = RetrieverTool(
@@ -75,11 +79,23 @@ def create_controller() -> ControllerAgent:
         retriever_tool,
     )
 
-    llm = LLMClient()
+    # -----------------------------------------
+    # LLM
+    # -----------------------------------------
+
+    llm = LLMClient(temperature=0.2)
+
+    # -----------------------------------------
+    # Writers
+    # -----------------------------------------
 
     markdown_writer = MarkdownWriter()
 
     csv_writer = CSVWriter()
+
+    # -----------------------------------------
+    # Agents
+    # -----------------------------------------
 
     answer_agent = AnswerAgent(
         llm,
@@ -95,13 +111,18 @@ def create_controller() -> ControllerAgent:
         csv_writer,
     )
 
+    # NEW Exam Analysis Agent
     exam_agent = ExamAnalysisAgent(
-        llm,
+        llm=llm,
     )
 
     quality_agent = QualityAuditorAgent(
         llm,
     )
+
+    # -----------------------------------------
+    # Controller
+    # -----------------------------------------
 
     controller = ControllerAgent(
         retrieval_agent=retrieval_agent,
@@ -160,6 +181,25 @@ def main() -> None:
 
             print(result["report"])
 
+            if result["sources"]:
+
+                print("\n" + "=" * 80)
+                print("PREVIOUS YEAR QUESTIONS")
+                print("=" * 80)
+
+                for i, q in enumerate(result["sources"], start=1):
+
+                    print(f"\nQ{i}. ({q['year']})")
+
+                    print(f"Chapter : {q['chapter']}")
+
+                    print(f"Concept : {q.get('concept','Unknown')}")
+
+                    print(f"\nQuestion:\n{q['question']}")
+
+                    if q["answer"]:
+                        print(f"\nAnswer:\n{q['answer']}")
+
         print("\n" + "=" * 80)
         print("QUALITY REPORT")
         print("=" * 80)
@@ -170,15 +210,17 @@ def main() -> None:
         print("SOURCES")
         print("=" * 80)
 
-        for i, document in enumerate(result["sources"], start=1):
+        if result["type"] != "exam_analysis":
 
-            metadata = document.metadata
+            for i, document in enumerate(result["sources"], start=1):
 
-            print(f"\n{i}. {metadata.get('source', 'Unknown')}")
+                metadata = document.metadata
 
-            print(f"   Chapter : {metadata.get('chapter_number', 'Unknown')}")
+                print(f"\n{i}. {metadata.get('source', 'Unknown')}")
 
-            print(f"   Subject : {metadata.get('subject', 'Unknown')}")
+                print(f"   Chapter : {metadata.get('chapter_number', 'Unknown')}")
+
+                print(f"   Subject : {metadata.get('subject', 'Unknown')}")
 
 
 if __name__ == "__main__":
