@@ -18,7 +18,8 @@ class LLMClient:
 
     def __init__(
         self,
-        model: str = "llama-3.3-70b-versatile",
+        # model: str = "llama-3.3-70b-versatile",
+        model: str = "llama-3.1-8b-instant",
         temperature: float = 0.3,
         max_tokens: int = 1024,
     ) -> None:
