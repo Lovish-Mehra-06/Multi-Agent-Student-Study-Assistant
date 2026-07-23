@@ -325,7 +325,7 @@ python app.py
 or
 
 ```bash
-streamlit run app.py
+streamlit run web_app.py
 ```
 
 ---
