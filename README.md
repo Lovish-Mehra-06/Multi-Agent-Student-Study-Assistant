@@ -3,8 +3,10 @@
 > An AI-powered Multi-Agent Student Study Assistant that transforms NCERT textbooks into personalized learning resources using **Retrieval-Augmented Generation (RAG)**, **Large Language Models (LLMs)**, and a collaborative **Multi-Agent AI** architecture.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![Streamlit](https://img.shields.io/badge/Streamlit-Web_App-FF4B4B)
 ![LangChain](https://img.shields.io/badge/LangChain-RAG-green)
-![FAISS](https://img.shields.io/badge/FAISS-Vector%20Database-red)
+![FAISS](https://img.shields.io/badge/FAISS-Vector_DB-orange)
+![Groq](https://img.shields.io/badge/Groq-LLM-purple)
 
 ---
 
@@ -49,41 +51,9 @@ This project automates these tasks using AI while ensuring that generated conten
 
 # 🏗️ System Architecture
 
-```
-                     NCERT Textbooks (PDF)
-                              │
-                              ▼
-                    ┌────────────────────┐
-                    │     PDF Agent      │
-                    │ Extract Text       │
-                    └─────────┬──────────┘
-                              │
-                              ▼
-                    Document Chunking
-                              │
-                              ▼
-                  Embedding Generation
-                              │
-                              ▼
-                  FAISS Vector Database
-                              │
-                  User Query + Retrieval
-                              │
-                              ▼
-                 ┌────────────────────────┐
-                 │   Retrieval Agent      │
-                 └──────────┬─────────────┘
-                            │
-                  Relevant Context
-                            │
-      ┌──────────────┬──────────────┬──────────────┐
-      ▼              ▼              ▼              ▼
- Notes Agent   Flashcard Agent  Exam Agent   Quality Agent
-      │              │              │              │
-      └──────────────┴──────────────┴──────────────┘
-                     ▼
-           Personalized Study Material
-```
+<p align="center">
+  <img src="images/architecture.png" alt="System Architecture" width="900">
+</p>
 
 ---
 
@@ -169,43 +139,6 @@ Validates AI-generated content.
 
 ---
 
-# 🔄 RAG Pipeline
-
-The system follows the Retrieval-Augmented Generation workflow:
-
-```
-PDF
- │
- ▼
-Extract Text
- │
- ▼
-Chunk Documents
- │
- ▼
-Generate Embeddings
- │
- ▼
-Store in FAISS
- │
- ▼
-User Query
- │
- ▼
-Semantic Retrieval
- │
- ▼
-LLM + Retrieved Context
- │
- ▼
-AI Agents
- │
- ▼
-Final Study Material
-```
-
----
-
 # 🛠️ Technology Stack
 
 | Category        | Technology            |
@@ -242,7 +175,6 @@ Multi-Agent-Student-Study-Assistant/
 │   ├── llm_client.py
 │   ├── markdown_writer.py
 │   ├── pdf_loader.py
-│   ├── rag_pipeline.py
 │   ├── retriever.py
 │   ├── vector_store.py
 │   └── __init__.py
@@ -257,15 +189,12 @@ Multi-Agent-Student-Study-Assistant/
 │   ├── flashcards/
 │   └── exam_analysis/
 │
-├── .vscode/
-├── venv/
-│
 ├── app.py
+├── web_app.py
 ├── config.py
 ├── requirements.txt
 ├── README.md
-├── .gitignore
-└── .env
+└── .gitignore
 ```
 
 ---
@@ -359,15 +288,14 @@ The system can generate:
 
 # 📈 Evaluation
 
-The system can be evaluated using metrics such as:
+The generated outputs are evaluated by the Quality Assurance Agent using:
 
-- Retrieval relevance
-- Context precision
-- QA Pass Rate
-- Pipeline Success Rate
-- Response latency
-- Hallucination rate
-- Output completeness
+- Groundedness
+- Completeness
+- Coherence
+- Conciseness
+
+These metrics ensure that the generated study material remains factually accurate, context-aware, logically organized, and concise.
 
 ---
 
