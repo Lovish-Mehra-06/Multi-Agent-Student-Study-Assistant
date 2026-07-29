@@ -18,9 +18,40 @@ The system follows a **Retrieval-Augmented Generation (RAG)** pipeline powered b
 
 ---
 
+# 🎥 Demo Video
+
+<p align="center">
+  <a href="https://youtu.be/g4kpGhv0iao">
+    <img src="images/qa.png" width="700" alt="Demo Video">
+  </a>
+</p>
+
+<p align="center">
+  <b>▶ Click the image above to watch the full demo on YouTube</b>
+</p>
+
+---
+
+# 📷 Application Screenshots
+
+| Home Page                               | Question Answering                    |
+| --------------------------------------- | ------------------------------------- |
+| <img src="images/home.png" width="450"> | <img src="images/qa.png" width="450"> |
+
+| Notes Generation                         | Flashcards Generation                        |
+| ---------------------------------------- | -------------------------------------------- |
+| <img src="images/notes.png" width="450"> | <img src="images/flashcard.png" width="450"> |
+
+| Exam Analysis                                                          |
+| ---------------------------------------------------------------------- |
+| <p align="center"><img src="images/exam_analysis.png" width="700"></p> |
+
+---
+
 # 🎯 Problem Statement
 
 Students often spend significant time:
+V
 
 - Searching for relevant textbook content
 - Creating revision notes

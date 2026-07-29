@@ -1,0 +1,14 @@
+Question,Answer
+"Define electric power.","Electric power is the rate at which electrical energy is delivered or consumed."
+"What is the formula for electric power?","P = V I, where P is power (W), V is voltage (V), and I is current (A)."
+"How do you calculate the power of a bulb connected to 220 V drawing 0.50 A?","P = 220 V × 0.50 A = 110 W."
+"What is the energy used by a 400 W refrigerator running 8 h/day for 30 days?","E = P × t = 400 W × 8 h/day × 30 days = 96,000 Wh = 96 kWh."
+"How do you compute the cost of electricity if it costs Rs 3.00 per kWh?","Cost = Energy (kWh) × Rs 3.00/kWh. For 96 kWh, Cost = 96 × 3 = Rs 288."
+"How do you find current from resistance using Ohm’s law?","I = V ÷ R."
+"What current does a 1200 Ω bulb filament draw at 220 V?","I = 220 V ÷ 1200 Ω ≈ 0.183 A."
+"What current does a 100 Ω heater coil draw at 220 V?","I = 220 V ÷ 100 Ω = 2.2 A."
+"What is the equivalent resistance of two 24 Ω coils in series?","R_eq = 24 Ω + 24 Ω = 48 Ω."
+"What is the equivalent resistance of two 24 Ω coils in parallel?","R_eq = (1/24 Ω + 1/24 Ω)⁻¹ = 12 Ω."
+"What is the current through each coil when connected alone to 220 V?","I = 220 V ÷ 24 Ω ≈ 9.17 A."
+"What is the current through the series connection of two 24 Ω coils?","I = 220 V ÷ 48 Ω ≈ 4.58 A."
+"What is the current through the parallel connection of two 24 Ω coils?","I = 220 V 
