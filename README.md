@@ -10,6 +10,14 @@
 
 ---
 
+## 🚀 Live Demo
+
+Try the application here:
+
+🌐 **https://multi-agent-study-assistant.streamlit.app/**
+
+---
+
 # 📖 Overview
 
 Studying from lengthy textbooks can be time-consuming and overwhelming. This project provides an intelligent study assistant that automatically converts textbook content into concise notes, flashcards, and exam-focused insights.
